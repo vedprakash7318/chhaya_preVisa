@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "../CSS/JobPage.css";
 
 const JobPage = () => {
+  const API_URL=import.meta.env.VITE_API_URL;
   const [jobs, setJobs] = useState([]);
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,10 +35,15 @@ const JobPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [selectedId, setSelectedId] = useState(null);
 
-  const JOB_API = "http://localhost:5000/api/jobs";
-  const COUNTRY_API = "http://localhost:5000/api/countries";
+  const JOB_API = `${API_URL}/api/jobs`;
+  const COUNTRY_API = `${API_URL}/api/countries`;
   const PreVisaOfficerId = localStorage.getItem("PreVisaManager");
 
+     useEffect(() => {
+      if (!localStorage.getItem('PreVisaManager')) {
+        navigate('/')
+      }
+    })
   // Fetch jobs
   const fetchJobs = async () => {
     try {

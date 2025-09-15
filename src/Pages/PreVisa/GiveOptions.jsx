@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from 'primereact/badge';
 
 function GiveOptions() {
+  const API_URL=import.meta.env.VITE_API_URL;
   const [pendingLeads, setPendingLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +24,17 @@ function GiveOptions() {
   const navigate = useNavigate();
   // This would typically come from your authentication context
   const PreVisaManager = localStorage.getItem('PreVisaManager');
+   useEffect(() => {
+    if (!localStorage.getItem('PreVisaManager')) {
+      navigate('/')
+    }
+  })
 
   useEffect(() => {
     const fetchPendingLeads = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/options/requestedTo/${PreVisaManager}`);
+        const response = await fetch(`${API_URL}/api/options/requestedTo/${PreVisaManager}`);
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -111,7 +117,7 @@ function GiveOptions() {
 
     try {
       setIsSubmitting(true);
-      const response = await fetch(`http://localhost:5000/api/options/${selectedLead._id}`, {
+      const response = await fetch(`${API_URL}/api/options/${selectedLead._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

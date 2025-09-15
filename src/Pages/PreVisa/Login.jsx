@@ -12,6 +12,7 @@ import 'primereact/resources/primereact.min.css';
 import '../CSS/Login.css';
 
 const Login = () => {
+  const API_URL=import.meta.env.VITE_API_URL;
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/pre-visa/login', form);      
+      const response = await axios.post(`${API_URL}/api/pre-visa/login`, form);      
       if (response.data?.user) {
         toast.success('Login successful!');
         const StaffHeadId=response.data.user.id

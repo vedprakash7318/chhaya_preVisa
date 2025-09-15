@@ -44,7 +44,7 @@ function App() {
               <ReviewFormFull />
             </Dashboard>
           } />
-          <Route path="verify-leads/ReviewFormFull" element={
+          <Route path="verify-leads/verify-leads-full" element={
             <Dashboard>
               <VerifyLeadsFull />
             </Dashboard>

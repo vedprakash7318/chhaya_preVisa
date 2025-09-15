@@ -14,6 +14,7 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 function VerifyLeads() {
+  const API_URL=import.meta.env.VITE_API_URL;
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState(""); // typing value
@@ -24,11 +25,16 @@ function VerifyLeads() {
   const preVisaManagerId = localStorage.getItem("PreVisaManager");
   const navigate = useNavigate();
 
+     useEffect(() => {
+      if (!localStorage.getItem('PreVisaManager')) {
+        navigate('/')
+      }
+    })
   const fetchForms = async () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:5000/api/client-form/get-by-previsa/${preVisaManagerId}`,
+        `${API_URL}/api/client-form/get-by-previsa/${preVisaManagerId}`,
         { params: { search: globalFilter } }
       );
       setForms(res.data.data || []);
@@ -45,7 +51,7 @@ function VerifyLeads() {
   }, [lazyParams, globalFilter]);
 
   const handleView = (rowData) => {
-    navigate("ReviewFormFull", { state: { lead: rowData._id } });
+    navigate("verify-leads-full", { state: { lead: rowData._id } });
   };
 
   const header = (

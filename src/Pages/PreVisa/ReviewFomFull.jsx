@@ -12,6 +12,7 @@ import { Badge } from 'primereact/badge';
 import { Accordion, AccordionTab } from 'primereact/accordion';
 
 const ReviewFormFull = () => {
+  const API_URL=import.meta.env.VITE_API_URL;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,11 +30,16 @@ const ReviewFormFull = () => {
   const lead = state?.lead;
   const id = lead?.formID?._id;
   const PreVisaManager = localStorage.getItem("PreVisaManager");
-
+     
+   useEffect(() => {
+    if (!localStorage.getItem('PreVisaManager')) {
+      navigate('/')
+    }
+  })
   const fetchJobs = async () => {
     try {
       setJobsLoading(true);
-      const res = await axios.get(`http://localhost:5000/api/jobs/job/${PreVisaManager}`);
+      const res = await axios.get(`${API_URL}/api/jobs/job/${PreVisaManager}`);
       console.log(res);
       
       const transformedJobs = res.data.data.map(job => ({
@@ -59,7 +65,7 @@ const ReviewFormFull = () => {
   const fetchOptions = async () => {
     setOptionsLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/options/optionGet/${id}`);
+      const res = await axios.get(`${API_URL}/api/options/optionGet/${id}`);
       setOptions(res.data.data);
     } catch (err) {
       console.error('Error fetching options:', err);
@@ -77,7 +83,7 @@ const ReviewFormFull = () => {
 
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/client-form/getbyId/${id}`);
+        const res = await axios.get(`${API_URL}/api/client-form/getbyId/${id}`);
         setData(res.data);
       } catch (err) {
         console.error(err);
@@ -120,7 +126,7 @@ const ReviewFormFull = () => {
     }
 
     try {
-      const res = await axios.put(`http://localhost:5000/api/options/update/${lastOptionId}`, {
+      const res = await axios.put(`${API_URL}/api/options/update/${lastOptionId}`, {
         options: selectedJob,
         responseMessage: response,
       });

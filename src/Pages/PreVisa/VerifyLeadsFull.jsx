@@ -12,6 +12,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { toast, ToastContainer } from 'react-toastify';
 
 const VerifyLeadsFull = () => {
+  const API_URL=import.meta.env.VITE_API_URL;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,6 +38,12 @@ const VerifyLeadsFull = () => {
   const lead = state?.lead;
   const id = lead;
 
+     useEffect(() => {
+      if (!localStorage.getItem('PreVisaManager')) {
+        navigate('/')
+      }
+    })
+
   useEffect(() => {
     if (id) {
       fetchOptions();
@@ -46,7 +53,7 @@ const VerifyLeadsFull = () => {
   const fetchOptions = async () => {
     setOptionsLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/options/optionGet/${id}`);
+      const res = await axios.get(`${API_URL}/api/options/optionGet/${id}`);
       setOptions(res.data.data);
     } catch (err) {
       console.error('Error fetching options:', err);
@@ -59,7 +66,7 @@ const VerifyLeadsFull = () => {
   const fetchFinalVisaManagers = async (searchQuery = '') => {
     setManagersLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/final-visa/', {
+      const response = await axios.get(`${API_URL}/api/final-visa/`, {
         params: { search: searchQuery }
       });
       setFinalVisaManagers(response.data);
@@ -98,7 +105,7 @@ const VerifyLeadsFull = () => {
 
     const fetchData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/client-form/getbyId/${id}`);
+        const res = await axios.get(`${API_URL}/api/client-form/getbyId/${id}`);
         setData(res.data);
       } catch (err) {
         console.error(err);
@@ -130,7 +137,7 @@ const VerifyLeadsFull = () => {
         console.log("Lead ID:", clientFormId);
         console.log("preVisaManagerId:", preVisaManagerId);
 
-        const res = await axios.put("http://localhost:5000/api/client-form/transfer-to-finalvisa", {
+        const res = await axios.put(`${API_URL}/api/client-form/transfer-to-finalvisa`, {
           clientFormId,
           preVisaManagerId,
           finalVisaManagerId,
