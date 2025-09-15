@@ -1,68 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './StyleCss/Sidebar.css';
 import {
-  FaHome, FaImage, FaVideo, FaCubes, FaCog, FaUserPlus, FaQuestion,
-  FaChevronDown, FaChevronRight, FaFilm, FaVideoSlash, FaYoutube
+  FaUserCheck,   // Verify Leads
+  FaBriefcase,   // Add Jobs
+  FaListAlt,     // Give Options
 } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { MdDashboard } from 'react-icons/md';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Sidebar({ isOpen }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [videoDropdownOpen, setVideoDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menu = [
-    { icon: <FaHome />, label: 'Dashboard', path: '/dashboard' },
-    { icon: <FaImage />, label: 'Add Country', path: '/country' },
-    { icon: <FaCubes />, label: 'Add Jobs', path: '/jobs' },
-    { icon: <FaCubes />, label: 'Give Options', path: '/jobs' },
-
+    { icon: <MdDashboard />, label: 'Dashboard', path: '/dashboard' },
+    { icon: <FaUserCheck />, label: 'Verify Leads', path: '/verify-leads' },
+    { icon: <FaBriefcase />, label: 'Add Jobs', path: '/jobs' },
+    { icon: <FaListAlt />, label: 'Give Options', path: '/give-option' },
   ];
 
-  const handleItemClick = (item) => {
-    if (item.dropdown) {
-      setVideoDropdownOpen(!videoDropdownOpen);
-    } else if (item.path) {
-      navigate(item.path);
-    }
-  };
-
   return (
-    <div
-      className={`admin-sidebar ${isOpen ? 'open' : 'collapsed'}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div className={`admin-sidebar ${isOpen ? 'open' : 'collapsed'}`}>
       <ul>
-        {menu.map((item, i) => (
-          <React.Fragment key={i}>
-            <li onClick={() => handleItemClick(item)}>
+        {menu.map((item, i) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <li
+              key={i}
+              className={isActive ? 'active' : ''}
+              onClick={() => navigate(item.path)}
+            >
               <span className="admin-icon">{item.icon}</span>
               <span className="admin-label">{item.label}</span>
-              {item.dropdown && (
-                <span className="dropdown-arrow">
-                  {videoDropdownOpen ? <FaChevronDown /> : <FaChevronRight />}
-                </span>
-              )}
             </li>
-
-            {/* Dropdown Submenu */}
-            {item.dropdown && videoDropdownOpen && (
-              <ul className="dropdown-menu open">
-                {item.dropdown.map((subItem, subIndex) => (
-                  <li
-                    key={subIndex}
-                    className="dropdown-item"
-                    onClick={() => navigate(subItem.path)}
-                  >
-                    <span className="admin-icon">{subItem.icon}</span>
-                    <span className="admin-label">{subItem.label}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </React.Fragment>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

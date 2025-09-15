@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaBell, FaEnvelope, FaUserCircle, FaBars } from 'react-icons/fa';
+import { FaUserCircle, FaBars } from 'react-icons/fa';
 import './StyleCss/header.css';
+
 
 const Header = ({ toggleSidebar }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -28,20 +29,11 @@ const Header = ({ toggleSidebar }) => {
           <FaBars />
         </button>
         <div className="search-bar">
-          <FaSearch className="search-icon" />
-          <input type="text" placeholder="Search..." />
+          <h3>Welcome back Pre-Visa Manager</h3>
         </div>
       </div>
       <div className="navbar-right">
-        <div className="nav-icon">
-          <FaBell />
-          <span className="notification-badge">3</span>
-        </div>
-        <div className="nav-icon">
-          <FaEnvelope />
-          <span className="notification-badge">5</span>
-        </div>
-
+      
         <div
           className="user-profile"
           ref={profileRef}

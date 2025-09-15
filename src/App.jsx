@@ -5,7 +5,10 @@ import Login from './Pages/PreVisa/Login';
 import Mainpages from './Pages/PreVisa/Mainpages'
 import Dashboard from './Pages/PreVisa/Dashboard'
 import JobPage from './Pages/PreVisa/JobPage';
-import CountryPage from './Pages/PreVisa/CountryPage';
+import GiveOptions from './Pages/PreVisa/GiveOptions';
+import ReviewFormFull from './Pages/PreVisa/ReviewFomFull';
+import VerifyLeads from './Pages/PreVisa/VerifyLeads';
+import VerifyLeadsFull from './Pages/PreVisa/VerifyLeadsFull';
 function App() {
   return (
     <>
@@ -20,17 +23,32 @@ function App() {
             </Dashboard>
           } />
 
-          <Route path="/country" element={
-            <Dashboard>
-              <CountryPage />
-            </Dashboard>
-          } />
 
           <Route path="/jobs" element={
             <Dashboard>
               <JobPage />
-            </Dashboard>}/>
+            </Dashboard>} />
 
+          <Route path="/give-option" element={
+            <Dashboard>
+              <GiveOptions />
+            </Dashboard>} />
+
+          <Route path="/verify-leads" element={
+            <Dashboard>
+              <VerifyLeads />
+            </Dashboard>} />
+
+          <Route path="give-option/ReviewFormFull" element={
+            <Dashboard>
+              <ReviewFormFull />
+            </Dashboard>
+          } />
+          <Route path="verify-leads/ReviewFormFull" element={
+            <Dashboard>
+              <VerifyLeadsFull />
+            </Dashboard>
+          } />
 
 
         </Routes>

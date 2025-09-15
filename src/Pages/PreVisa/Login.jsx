@@ -30,7 +30,7 @@ const Login = () => {
         toast.success('Login successful!');
         const StaffHeadId=response.data.user.id
         // Optional: Store user info (not token)
-        localStorage.setItem('staffHeadID',StaffHeadId);
+        localStorage.setItem('PreVisaManager',StaffHeadId);
 
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {

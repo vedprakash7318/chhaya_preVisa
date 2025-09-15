@@ -7,11 +7,10 @@ import { InputText } from "primereact/inputtext";
 import { InputNumber } from "primereact/inputnumber";
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
+import { Calendar } from "primereact/calendar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
-import "primereact/resources/primereact.min.css";
-import "primeicons/primeicons.css";
+import "../CSS/JobPage.css";
 
 const JobPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -27,19 +26,25 @@ const JobPage = () => {
     salary: "",
     serviceCharge: "",
     adminCharge: "",
-    country: ""
+    country: "",
+    jobAddedBy: "",
+    jobAddedByType: "",
+    lastDateToApply: null
   });
   const [formErrors, setFormErrors] = useState({});
   const [selectedId, setSelectedId] = useState(null);
 
   const JOB_API = "http://localhost:5000/api/jobs";
   const COUNTRY_API = "http://localhost:5000/api/countries";
+  const PreVisaOfficerId = localStorage.getItem("PreVisaManager");
 
   // Fetch jobs
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(JOB_API);
+      const res = await axios.get(`${JOB_API}/${PreVisaOfficerId}`);
+      // console.log(res);
+      
       setJobs(res.data.data);
     } catch (err) {
       toast.error("Error fetching jobs");
@@ -86,6 +91,13 @@ const JobPage = () => {
     }
   };
 
+  const handleDateChange = (e) => {
+    setFormData({ ...formData, lastDateToApply: e.value });
+    if (formErrors.lastDateToApply) {
+      setFormErrors({ ...formErrors, lastDateToApply: "" });
+    }
+  };
+
   // Validate form
   const validateForm = () => {
     const errors = {};
@@ -96,6 +108,10 @@ const JobPage = () => {
     if (!formData.adminCharge && formData.adminCharge !== 0) errors.adminCharge = "Admin charge is required";
     if (formData.serviceCharge < 0) errors.serviceCharge = "Service charge cannot be negative";
     if (formData.adminCharge < 0) errors.adminCharge = "Admin charge cannot be negative";
+    if (!formData.lastDateToApply) errors.lastDateToApply = "Last date to apply is required";
+    if (formData.lastDateToApply && new Date(formData.lastDateToApply) < new Date()) {
+      errors.lastDateToApply = "Last date to apply cannot be in the past";
+    }
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -110,7 +126,10 @@ const JobPage = () => {
       salary: "",
       serviceCharge: "",
       adminCharge: "",
-      country: ""
+      country: "",
+      jobAddedBy: PreVisaOfficerId,
+      jobAddedByType: "PreVisaOfficer",
+      lastDateToApply: null
     });
     setFormErrors({});
     setIsEdit(false);
@@ -126,7 +145,8 @@ const JobPage = () => {
       salary: row.salary || "",
       serviceCharge: row.serviceCharge,
       adminCharge: row.adminCharge,
-      country: row.country?._id
+      country: row.country?._id,
+      lastDateToApply: row.lastDateToApply ? new Date(row.lastDateToApply) : null
     });
     setFormErrors({});
     setSelectedId(row._id);
@@ -141,7 +161,8 @@ const JobPage = () => {
     try {
       const submitData = {
         ...formData,
-        WorkTime: formData.WorkTime.trim()
+        WorkTime: formData.WorkTime.trim(),
+        lastDateToApply: formData.lastDateToApply.toISOString()
       };
       
       if (isEdit) {
@@ -182,224 +203,279 @@ const JobPage = () => {
     });
   };
 
-  // Template functions for columns
-  const salaryTemplate = (row) => {
-    return row.salary && row.salary !== 0 ? formatNumber(row.salary) : '-';
-  };
-
-  const serviceChargeTemplate = (row) => {
-    return formatNumber(row.serviceCharge);
-  };
-
-  const adminChargeTemplate = (row) => {
-    return formatNumber(row.adminCharge);
-  };
-
-  const workTimeTemplate = (row) => {
-    return row.WorkTime || '-';
-  };
-
-  const countryTemplate = (row) => {
-    return row.country?.countryName || '-';
-  };
-
-  const createdDateTemplate = (row) => {
-    return new Date(row.createdAt).toLocaleDateString('en-US', {
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
 
+  // Check if job is expired
+  const isJobExpired = (lastDateToApply) => {
+    if (!lastDateToApply) return false;
+    return new Date(lastDateToApply) < new Date();
+  };
+
+  // Template functions for columns
+  const salaryTemplate = (row) => (
+    <span className="JobPage-salary-value">
+      {row.salary && row.salary !== 0 ? formatNumber(row.salary) : '-'}
+    </span>
+  );
+
+  const serviceChargeTemplate = (row) => (
+    <span className="JobPage-service-charge-value">
+      {formatNumber(row.serviceCharge)}
+    </span>
+  );
+
+  const adminChargeTemplate = (row) => (
+    <span className="JobPage-admin-charge-value">
+      {formatNumber(row.adminCharge)}
+    </span>
+  );
+
+  const workTimeTemplate = (row) => (
+    <span className="JobPage-work-time-badge">
+      {row.WorkTime || 'Not specified'}
+    </span>
+  );
+
+  const countryTemplate = (row) => (
+    <div className="JobPage-country-cell">
+      <i className="pi pi-globe JobPage-country-icon"></i>
+      <span>{row.country?.countryName || '-'}</span>
+    </div>
+  );
+
+  const jobTitleTemplate = (row) => (
+    <div className="JobPage-job-title-cell">
+      <i className="pi pi-briefcase JobPage-job-icon"></i>
+      <span className="JobPage-job-title">{row.jobTitle}</span>
+    </div>
+  );
+
+  const descriptionTemplate = (row) => (
+    <div className="JobPage-description-cell" title={row.description}>
+      {row.description || 'No description'}
+    </div>
+  );
+
+  const createdDateTemplate = (row) => (
+    <span className="JobPage-date-cell">
+      {new Date(row.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })}
+    </span>
+  );
+
+  const lastDateTemplate = (row) => (
+    <span className={`JobPage-last-date-value ${isJobExpired(row.lastDateToApply) ? 'JobPage-expired' : ''}`}>
+      {formatDate(row.lastDateToApply)}
+      {isJobExpired(row.lastDateToApply)}
+    </span>
+  );
+ const statusTemplate = (row) => (
+    <span className={`JobPage-status-badge ${row.isActive ? 'JobPage-status-active' : 'JobPage-status-expired'}`}>
+      {row.isActive ? 'Active' : 'Expired'}
+    </span>
+  );
+
   const actionTemplate = (row) => (
-    <div className="flex gap-2">
+    <div className="JobPage-action-buttons">
       <Button 
         icon="pi pi-pencil" 
-        className="p-button-rounded p-button-warning p-button-sm" 
+        className="JobPage-edit-btn p-button-rounded" 
         onClick={() => openEditDialog(row)}
-        tooltip="Edit"
+        tooltip="Edit Job"
+        tooltipOptions={{ position: 'top' }}
       />
       <Button 
         icon="pi pi-trash" 
-        className="p-button-rounded p-button-danger p-button-sm" 
+        className="JobPage-delete-btn p-button-rounded" 
         onClick={() => handleDelete(row._id)}
-        tooltip="Delete"
+        tooltip="Delete Job"
+        tooltipOptions={{ position: 'top' }}
       />
     </div>
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <ToastContainer position="top-right" autoClose={3000} />
+    <div className="JobPage-container">
+      <ToastContainer position="top-right" className="JobPage-toast-container" />
       
       {/* Header Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Job Management</h1>
-            <p className="text-gray-600 mt-1">Manage and organize job listings</p>
+      <div className="JobPage-header-section">
+        <div className="JobPage-header-content">
+          <div className="JobPage-title-section">
+              <h1 className="JobPage-page-title">Job Management</h1>
+          </div>
+          <div className="JobPage-search-container">
+            <span className="JobPage-search-wrapper   ">
+              
+              <InputText
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Search jobs..."
+                className="JobPage-search-input"
+              />
+            </span>
           </div>
           <Button 
             label="Add New Job" 
             icon="pi pi-plus" 
-            className="p-button-success"
+            className="JobPage-add-btn"
             onClick={openAddDialog} 
           />
         </div>
       </div>
 
-      {/* Table Header Section */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="flex items-center mb-4">
-          <i className="pi pi-briefcase text-2xl text-blue-600 mr-3"></i>
-          <h2 className="text-xl font-semibold text-gray-800">Job Table</h2>
-        </div>
-        
-        <div className="flex justify-between items-center">
-          <div className="relative w-80">
-            <i className="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <InputText 
-              value={globalFilter} 
-              onChange={(e) => setGlobalFilter(e.target.value)} 
-              placeholder="Search jobs..." 
-              className="w-full pl-10"
-            />
-          </div>
-          <div className="flex items-center bg-blue-50 px-4 py-2 rounded-lg">
-            <i className="pi pi-chart-bar text-blue-600 mr-2"></i>
-            <span className="text-blue-700 font-semibold">
-              Total Jobs: {jobs.length}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Data Table */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+      {/* Data Table Section */}
         <DataTable 
           value={jobs} 
           paginator 
           rows={10} 
-          rowsPerPageOptions={[5, 10, 25, 50]}
           loading={loading} 
           globalFilter={globalFilter} 
           emptyMessage="No jobs found"
-          className="p-datatable-striped"
+          className="JobPage-datatable"
           responsiveLayout="scroll"
-          paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} jobs"
         >
           <Column 
             field="jobTitle" 
             header="Job Title" 
-            sortable 
+            body={jobTitleTemplate}
             filter 
             filterPlaceholder="Search by title"
-            style={{ minWidth: '200px' }}
-            className="font-semibold"
+            className="JobPage-job-title-column"
+            headerClassName="JobPage-header-cell"
+            style={{ minWidth: '220px' }}
           />
           <Column 
             field="description" 
             header="Description" 
+            body={descriptionTemplate}
+            className="JobPage-description-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '250px' }}
-            body={(row) => (
-              <div className="max-w-xs truncate" title={row.description}>
-                {row.description || '-'}
-              </div>
-            )}
           />
           <Column 
             field="WorkTime" 
             header="Work Time" 
             body={workTimeTemplate} 
-            sortable 
+            className="JobPage-work-time-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '150px' }}
           />
           <Column 
             field="salary" 
             header="Salary" 
             body={salaryTemplate} 
-            sortable 
+            className="JobPage-salary-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '120px' }}
-            className="text-green-600 font-semibold"
           />
           <Column 
             field="serviceCharge" 
             header="Service Charge" 
             body={serviceChargeTemplate} 
-            sortable 
+            className="JobPage-service-charge-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '140px' }}
-            className="text-blue-600"
           />
           <Column 
             field="adminCharge" 
             header="Admin Charge" 
             body={adminChargeTemplate} 
-            sortable 
+            className="JobPage-admin-charge-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '140px' }}
-            className="text-orange-600"
           />
           <Column 
             field="country.countryName" 
             header="Country" 
             body={countryTemplate} 
-            sortable 
             filter
             filterPlaceholder="Search by country"
+            className="JobPage-country-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '120px' }}
+          />
+          <Column 
+            field="lastDateToApply" 
+            header="Last Date to Apply" 
+            body={lastDateTemplate} 
+            className="JobPage-last-date-column"
+            headerClassName="JobPage-header-cell"
+            style={{ minWidth: '150px' }}
           />
           <Column 
             field="createdAt" 
             header="Created Date" 
             body={createdDateTemplate} 
-            sortable 
+            className="JobPage-date-column"
+            headerClassName="JobPage-header-cell"
             style={{ minWidth: '120px' }}
+          />
+          <Column 
+            body={statusTemplate} 
+            header="Status" 
+            className="JobPage-status-column"
+            headerClassName="JobPage-header-cell"
+            style={{ minWidth: '100px' }}
           />
           <Column 
             body={actionTemplate} 
             header="Actions" 
-            style={{ width: '100px' }}
-            frozen
-            alignFrozen="right"
+            className="JobPage-actions-column"
+            headerClassName="JobPage-header-cell"
+            style={{ width: '120px' }}
           />
         </DataTable>
-      </div>
+      
 
       {/* Modal Dialog */}
       <Dialog 
         header={
-          <div className="flex items-center gap-3">
-            <i className={`pi ${isEdit ? 'pi-pencil' : 'pi-plus'} text-blue-600`}></i>
+          <div className="JobPage-dialog-header">
+            <i className={`pi ${isEdit ? 'pi-pencil' : 'pi-plus'} JobPage-dialog-icon`}></i>
             <span>{isEdit ? "Edit Job" : "Add New Job"}</span>
           </div>
         } 
         visible={dialogVisible} 
-        style={{ width: "600px" }} 
+        className="JobPage-dialog"
         onHide={() => setDialogVisible(false)}
-        className="p-fluid"
-        modal
-        blockScroll
+        breakpoints={{ '960px': '75vw', '641px': '90vw' }}
+        style={{ width: '650px' }}
       >
-        <div className="grid grid-cols-1 gap-4 p-4">
+        <div className="JobPage-form-container p-fluid">
           {/* Job Title */}
-          <div className="field">
-            <label htmlFor="jobTitle" className="font-semibold text-gray-700 mb-2 block">
-              Job Title <span className="text-red-500">*</span>
+          <div className="JobPage-form-field">
+            <label htmlFor="jobTitle" className="JobPage-form-label">
+              Job Title <span className="JobPage-required">*</span>
             </label>
             <InputText 
               id="jobTitle" 
               name="jobTitle" 
               value={formData.jobTitle} 
               onChange={handleChange} 
-              className={`w-full ${formErrors.jobTitle ? 'p-invalid' : ''}`}
+              className={`JobPage-form-input ${formErrors.jobTitle ? 'JobPage-form-input-error' : ''}`}
               placeholder="Enter job title"
             />
-            {formErrors.jobTitle && <small className="p-error block mt-1">{formErrors.jobTitle}</small>}
+            {formErrors.jobTitle && <small className="JobPage-error-message">{formErrors.jobTitle}</small>}
           </div>
           
           {/* Description */}
-          <div className="field">
-            <label htmlFor="description" className="font-semibold text-gray-700 mb-2 block">
+          <div className="JobPage-form-field">
+            <label htmlFor="description" className="JobPage-form-label">
               Description
             </label>
             <InputText 
@@ -407,14 +483,14 @@ const JobPage = () => {
               name="description" 
               value={formData.description} 
               onChange={handleChange} 
-              className="w-full"
+              className="JobPage-form-input"
               placeholder="Enter job description"
             />
           </div>
           
           {/* Work Time */}
-          <div className="field">
-            <label htmlFor="WorkTime" className="font-semibold text-gray-700 mb-2 block">
+          <div className="JobPage-form-field">
+            <label htmlFor="WorkTime" className="JobPage-form-label">
               Work Time
             </label>
             <InputText 
@@ -422,33 +498,32 @@ const JobPage = () => {
               name="WorkTime" 
               value={formData.WorkTime} 
               onChange={handleChange} 
-              className="w-full"
+              className="JobPage-form-input"
               placeholder="e.g., 9am-5pm, Full-time, Part-time"
             />
           </div>
           
-          {/* Salary */}
-          <div className="field">
-            <label htmlFor="salary" className="font-semibold text-gray-700 mb-2 block">
-              Salary
-            </label>
-            <InputNumber 
-              id="salary" 
-              value={formData.salary} 
-              onValueChange={(e) => handleNumericChange(e, 'salary')} 
-              mode="decimal" 
-              minFractionDigits={2}
-              maxFractionDigits={2}
-              className="w-full"
-              placeholder="Enter salary amount"
-            />
-          </div>
-          
-          {/* Charges Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="field">
-              <label htmlFor="serviceCharge" className="font-semibold text-gray-700 mb-2 block">
-                Service Charge <span className="text-red-500">*</span>
+          {/* Salary and Charges Grid */}
+          <div className="JobPage-form-grid">
+            <div className="JobPage-form-field">
+              <label htmlFor="salary" className="JobPage-form-label">
+                Salary
+              </label>
+              <InputNumber 
+                id="salary" 
+                value={formData.salary} 
+                onValueChange={(e) => handleNumericChange(e, 'salary')} 
+                mode="decimal" 
+                minFractionDigits={2}
+                maxFractionDigits={2}
+                className="JobPage-form-input"
+                placeholder="Enter salary amount"
+              />
+            </div>
+            
+            <div className="JobPage-form-field">
+              <label htmlFor="serviceCharge" className="JobPage-form-label">
+                Service Charge <span className="JobPage-required">*</span>
               </label>
               <InputNumber 
                 id="serviceCharge" 
@@ -457,15 +532,15 @@ const JobPage = () => {
                 mode="decimal" 
                 minFractionDigits={2}
                 maxFractionDigits={2}
-                className={`w-full ${formErrors.serviceCharge ? 'p-invalid' : ''}`}
+                className={`JobPage-form-input ${formErrors.serviceCharge ? 'JobPage-form-input-error' : ''}`}
                 placeholder="0.00"
               />
-              {formErrors.serviceCharge && <small className="p-error block mt-1">{formErrors.serviceCharge}</small>}
+              {formErrors.serviceCharge && <small className="JobPage-error-message">{formErrors.serviceCharge}</small>}
             </div>
             
-            <div className="field">
-              <label htmlFor="adminCharge" className="font-semibold text-gray-700 mb-2 block">
-                Admin Charge <span className="text-red-500">*</span>
+            <div className="JobPage-form-field">
+              <label htmlFor="adminCharge" className="JobPage-form-label">
+                Admin Charge <span className="JobPage-required">*</span>
               </label>
               <InputNumber 
                 id="adminCharge" 
@@ -474,48 +549,66 @@ const JobPage = () => {
                 mode="decimal" 
                 minFractionDigits={2}
                 maxFractionDigits={2}
-                className={`w-full ${formErrors.adminCharge ? 'p-invalid' : ''}`}
+                className={`JobPage-form-input ${formErrors.adminCharge ? 'JobPage-form-input-error' : ''}`}
                 placeholder="0.00"
               />
-              {formErrors.adminCharge && <small className="p-error block mt-1">{formErrors.adminCharge}</small>}
+              {formErrors.adminCharge && <small className="JobPage-error-message">{formErrors.adminCharge}</small>}
             </div>
           </div>
           
           {/* Country */}
-          <div className="field">
-            <label htmlFor="country" className="font-semibold text-gray-700 mb-2 block">
-              Country <span className="text-red-500">*</span>
+          <div className="JobPage-form-field">
+            <label htmlFor="country" className="JobPage-form-label">
+              Country <span className="JobPage-required">*</span>
             </label>
             <Dropdown 
               value={formData.country} 
               options={countries} 
               onChange={handleDropdown} 
               placeholder="Select a Country" 
-              className={`w-full ${formErrors.country ? 'p-invalid' : ''}`}
+              className={`JobPage-form-dropdown ${formErrors.country ? 'JobPage-form-input-error' : ''}`}
               filter
               showClear
             />
-            {formErrors.country && <small className="p-error block mt-1">{formErrors.country}</small>}
+            {formErrors.country && <small className="JobPage-error-message">{formErrors.country}</small>}
           </div>
-        </div>
-        
-        {/* Dialog Footer */}
-        <div className="flex justify-end gap-3 p-4 border-t">
-          <Button 
-            label="Cancel" 
-            className="p-button-text p-button-secondary" 
-            onClick={() => setDialogVisible(false)} 
-          />
-          <Button 
-            label={isEdit ? "Update Job" : "Save Job"} 
-            className="p-button-primary"
-            onClick={handleSubmit} 
-            icon={isEdit ? "pi pi-check" : "pi pi-save"}
-          />
+          
+          {/* Last Date to Apply */}
+          <div className="JobPage-form-field">
+            <label htmlFor="lastDateToApply" className="JobPage-form-label">
+              Last Date to Apply <span className="JobPage-required">*</span>
+            </label>
+            <Calendar
+              id="lastDateToApply"
+              value={formData.lastDateToApply}
+              onChange={handleDateChange}
+              dateFormat="dd/mm/yy"
+              showIcon
+              className={`JobPage-form-input ${formErrors.lastDateToApply ? 'JobPage-form-input-error' : ''}`}
+              minDate={new Date()}
+              placeholder="Select last date to apply"
+            />
+            {formErrors.lastDateToApply && <small className="JobPage-error-message">{formErrors.lastDateToApply}</small>}
+          </div>
+          
+          <div className="JobPage-form-actions">
+            <Button 
+              label="Cancel" 
+              className="JobPage-cancel-btn p-button-text" 
+              onClick={() => setDialogVisible(false)} 
+            />
+            <Button 
+              label={isEdit ? "Update Job" : "Save Job"} 
+              className="JobPage-save-btn"
+              onClick={handleSubmit} 
+              icon={isEdit ? "pi pi-check" : "pi pi-save"}
+              disabled={!formData.jobTitle.trim() || !formData.country || !formData.lastDateToApply}
+            />
+          </div>
         </div>
       </Dialog>
     </div>
   );
 };
 
-export default JobPage; 
+export default JobPage;
