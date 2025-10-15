@@ -26,7 +26,7 @@ const JobPage = () => {
     WorkTime: "",
     salary: "",
     serviceCharge: "",
-    adminCharge: "",
+    // adminCharge: "",
     country: "",
     jobAddedBy: "",
     jobAddedByType: "",
@@ -111,9 +111,9 @@ const JobPage = () => {
     if (!formData.jobTitle.trim()) errors.jobTitle = "Job title is required";
     if (!formData.country) errors.country = "Country is required";
     if (!formData.serviceCharge && formData.serviceCharge !== 0) errors.serviceCharge = "Service charge is required";
-    if (!formData.adminCharge && formData.adminCharge !== 0) errors.adminCharge = "Admin charge is required";
+    // if (!formData.adminCharge && formData.adminCharge !== 0) errors.adminCharge = "Admin charge is required";
     if (formData.serviceCharge < 0) errors.serviceCharge = "Service charge cannot be negative";
-    if (formData.adminCharge < 0) errors.adminCharge = "Admin charge cannot be negative";
+    // if (formData.adminCharge < 0) errors.adminCharge = "Admin charge cannot be negative";
     if (!formData.lastDateToApply) errors.lastDateToApply = "Last date to apply is required";
     if (formData.lastDateToApply && new Date(formData.lastDateToApply) < new Date()) {
       errors.lastDateToApply = "Last date to apply cannot be in the past";
@@ -131,7 +131,7 @@ const JobPage = () => {
       WorkTime: "",
       salary: "",
       serviceCharge: "",
-      adminCharge: "",
+      // adminCharge: "",
       country: "",
       jobAddedBy: PreVisaOfficerId,
       jobAddedByType: "PreVisaOfficer",
@@ -150,7 +150,7 @@ const JobPage = () => {
       WorkTime: row.WorkTime || "",
       salary: row.salary || "",
       serviceCharge: row.serviceCharge,
-      adminCharge: row.adminCharge,
+      // adminCharge: row.adminCharge,
       country: row.country?._id,
       lastDateToApply: row.lastDateToApply ? new Date(row.lastDateToApply) : null
     });
@@ -239,11 +239,11 @@ const JobPage = () => {
     </span>
   );
 
-  const adminChargeTemplate = (row) => (
-    <span className="JobPage-admin-charge-value">
-      {formatNumber(row.adminCharge)}
-    </span>
-  );
+  // const adminChargeTemplate = (row) => (
+  //   <span className="JobPage-admin-charge-value">
+  //     {formatNumber(row.adminCharge)}
+  //   </span>
+  // );
 
   const workTimeTemplate = (row) => (
     <span className="JobPage-work-time-badge">
@@ -397,14 +397,14 @@ const JobPage = () => {
             headerClassName="JobPage-header-cell"
             style={{ minWidth: '140px' }}
           />
-          <Column 
+          {/* <Column 
             field="adminCharge" 
             header="Admin Charge" 
             body={adminChargeTemplate} 
             className="JobPage-admin-charge-column"
             headerClassName="JobPage-header-cell"
             style={{ minWidth: '140px' }}
-          />
+          /> */}
           <Column 
             field="country.countryName" 
             header="Country" 
@@ -544,7 +544,7 @@ const JobPage = () => {
               {formErrors.serviceCharge && <small className="JobPage-error-message">{formErrors.serviceCharge}</small>}
             </div>
             
-            <div className="JobPage-form-field">
+            {/* <div className="JobPage-form-field">
               <label htmlFor="adminCharge" className="JobPage-form-label">
                 Admin Charge <span className="JobPage-required">*</span>
               </label>
@@ -559,7 +559,7 @@ const JobPage = () => {
                 placeholder="0.00"
               />
               {formErrors.adminCharge && <small className="JobPage-error-message">{formErrors.adminCharge}</small>}
-            </div>
+            </div> */}
           </div>
           
           {/* Country */}

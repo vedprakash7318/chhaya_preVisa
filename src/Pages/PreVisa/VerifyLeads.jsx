@@ -12,24 +12,24 @@ import "react-toastify/dist/ReactToastify.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
-
+  
 function VerifyLeads() {
-  const API_URL=import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL;
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState(""); // typing value
-  const [globalFilter, setGlobalFilter] = useState(""); // actual search term
+  const [searchInput, setSearchInput] = useState(""); 
+  const [globalFilter, setGlobalFilter] = useState(""); 
   const [totalRecords, setTotalRecords] = useState(0);
   const [lazyParams, setLazyParams] = useState({ first: 0, rows: 10, page: 0 });
 
   const preVisaManagerId = localStorage.getItem("PreVisaManager");
   const navigate = useNavigate();
 
-     useEffect(() => {
-      if (!localStorage.getItem('PreVisaManager')) {
-        navigate('/')
-      }
-    })
+  useEffect(() => {
+    if (!localStorage.getItem('PreVisaManager')) {
+      navigate('/')
+    }
+  })
   const fetchForms = async () => {
     try {
       setLoading(true);
@@ -76,7 +76,7 @@ function VerifyLeads() {
         <Button
           label="Search"
           icon="pi pi-search"
-          style={{width:"50%" }}
+          style={{ width: "50%" }}
 
           onClick={() => setGlobalFilter(searchInput)} // trigger search
         />
